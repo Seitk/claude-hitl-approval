@@ -575,18 +575,18 @@
           </div>
         </div>
         <div class="screenshot-card">
-          <div class="img-wrap"><img src="request_detail.png" alt="Claude Code terminal showing the two-step HITL flow: context requested, then Claude retries with description" /></div>
+          <div class="img-wrap"><img src="request_detail.png" alt="HITL web UI showing approval request detail with command, description, tool, user, and audit trail" /></div>
           <div class="caption">
-            <h3>Context Request Flow</h3>
-            <p>The hook asks Claude to explain its intent. Claude retries with a description, then the request goes to review.</p>
+            <h3>Request Detail</h3>
+            <p>Full context for every request: command, Claude's description, tool, working directory, and a timestamped audit trail.</p>
           </div>
         </div>
       </div>
       <div class="screenshot-card" style="margin-top: 1.5rem;">
-        <div class="img-wrap" style="height: auto;"><img src="request_response.png" style="width: 100%; max-height: none;" alt="Claude Code terminal showing a denied MCP tool call blocked by the HITL hook" /></div>
+        <div class="img-wrap" style="height: auto;"><img src="request_response.png" style="width: 100%; max-height: none;" alt="Claude Code terminal showing the two-step HITL flow: hook requests context, Claude retries with description, then request is denied" /></div>
         <div class="caption">
-          <h3>Denied Request</h3>
-          <p>When a request is denied, Claude is notified and stops. Works with MCP tools too.</p>
+          <h3>Two-Step Approval Flow</h3>
+          <p>The hook intercepts a tool call, asks Claude for context, then submits the request with Claude's explanation for human review.</p>
         </div>
       </div>
     </div>
