@@ -1,0 +1,12 @@
+{
+  "approval": {
+    "url": "http://localhost:9457",
+    "pollIntervalMs": 1000,
+    "timeoutMs": 60000
+  },
+  "rules": [
+    { "tool": "Bash", "pattern": "*demo.ts*" },
+    { "tool": "Bash", "pattern": "rm *" },
+    { "tool": "Bash", "pattern": "git push*" }
+  ]
+}

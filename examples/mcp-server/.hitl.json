@@ -1,0 +1,10 @@
+{
+  "approval": {
+    "url": "http://localhost:9457",
+    "pollIntervalMs": 1000,
+    "timeoutMs": 60000
+  },
+  "rules": [
+    { "tool": "mcp__joke-server__tell_joke", "pattern": "*" }
+  ]
+}
