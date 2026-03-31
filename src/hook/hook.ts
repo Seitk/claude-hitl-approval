@@ -23,6 +23,19 @@ export function extractCommand(
   }
 }
 
+export function extractDescription(
+  toolInput: Record<string, unknown>,
+): string | null {
+  const desc = toolInput['description'];
+  return typeof desc === 'string' && desc.trim() ? desc.trim() : null;
+}
+
+export function buildContextRequestMessage(tool: string, command: string): string {
+  return `HITL_CONTEXT_REQUIRED: This ${tool} command requires human approval. Before it can be submitted for approval, you must re-run this exact command with a detailed "description" parameter explaining: (1) what this command does, and (2) why you are running it in the current context. The description should help a human reviewer understand your intent.
+
+Command: ${command}`;
+}
+
 export function buildDenialMessage(
   requestId: string,
   reason: 'denied' | 'timeout',
@@ -48,9 +61,16 @@ async function main(): Promise<void> {
   const cwd = input.workspace?.current_dir ?? process.cwd();
   const config = loadConfig(cwd);
   const command = extractCommand(input.tool_name, input.tool_input);
+  const description = extractDescription(input.tool_input);
 
   if (!matchesAnyRule(input.tool_name, command, config.rules)) {
     process.exit(0);
+  }
+
+  // If no description provided, ask Claude to retry with context
+  if (!description) {
+    console.error(buildContextRequestMessage(input.tool_name, command));
+    process.exit(2);
   }
 
   // Create approval request
@@ -62,6 +82,7 @@ async function main(): Promise<void> {
       body: JSON.stringify({
         tool: input.tool_name,
         command,
+        description,
         workdir: cwd,
         sessionId: input.session_id ?? null,
       }),

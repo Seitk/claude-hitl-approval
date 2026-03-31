@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { extractCommand, buildDenialMessage } from '../hook/hook';
+import { extractCommand, extractDescription, buildContextRequestMessage, buildDenialMessage } from '../hook/hook';
 
 describe('extractCommand', () => {
   it('extracts command from Bash tool_input', () => {
@@ -17,6 +17,51 @@ describe('extractCommand', () => {
   it('falls back to JSON for unknown tools', () => {
     const result = extractCommand('UnknownTool', { foo: 'bar' });
     expect(result).toBe('{"foo":"bar"}');
+  });
+});
+
+describe('extractDescription', () => {
+  it('extracts description string from tool_input', () => {
+    expect(extractDescription({ command: 'rm -rf dist', description: 'Delete dist directory' }))
+      .toBe('Delete dist directory');
+  });
+
+  it('returns null when description is missing', () => {
+    expect(extractDescription({ command: 'ls' })).toBeNull();
+  });
+
+  it('returns null when description is empty string', () => {
+    expect(extractDescription({ command: 'ls', description: '' })).toBeNull();
+  });
+
+  it('returns null when description is whitespace', () => {
+    expect(extractDescription({ command: 'ls', description: '   ' })).toBeNull();
+  });
+
+  it('trims whitespace from description', () => {
+    expect(extractDescription({ description: '  Run tests  ' })).toBe('Run tests');
+  });
+
+  it('returns null when description is not a string', () => {
+    expect(extractDescription({ description: 42 })).toBeNull();
+  });
+});
+
+describe('buildContextRequestMessage', () => {
+  it('includes HITL_CONTEXT_REQUIRED prefix', () => {
+    const msg = buildContextRequestMessage('Bash', 'rm -rf dist');
+    expect(msg).toContain('HITL_CONTEXT_REQUIRED');
+  });
+
+  it('includes the tool name and command', () => {
+    const msg = buildContextRequestMessage('Bash', 'git push origin main');
+    expect(msg).toContain('Bash');
+    expect(msg).toContain('git push origin main');
+  });
+
+  it('asks for description parameter', () => {
+    const msg = buildContextRequestMessage('Bash', 'rm -rf dist');
+    expect(msg).toContain('description');
   });
 });
 

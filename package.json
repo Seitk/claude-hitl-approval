@@ -1,6 +1,6 @@
 {
   "name": "claude-hitl-approval",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "Human-in-the-loop approval gate for Claude Code commands",
   "license": "MIT",
   "author": "Philip Yu",

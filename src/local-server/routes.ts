@@ -45,6 +45,18 @@ function generateDescription(
   child.on('error', () => {});
 }
 
+function parseDescriptionFromCommand(command: string): string | null {
+  try {
+    const parsed = JSON.parse(command);
+    if (parsed && typeof parsed.description === 'string' && parsed.description.trim()) {
+      return parsed.description.trim();
+    }
+  } catch {
+    // Not JSON — ignore
+  }
+  return null;
+}
+
 export function registerRoutes(
   app: Express,
   store: DataStore,
@@ -52,9 +64,10 @@ export function registerRoutes(
 ): void {
   // Create approval request (hook)
   app.post('/requests', async (req: Request, res: Response) => {
-    const { tool, command, workdir, sessionId } = req.body as {
+    const { tool, command, description, workdir, sessionId } = req.body as {
       tool?: string;
       command?: string;
+      description?: string;
       workdir?: string;
       sessionId?: string;
     };
@@ -63,16 +76,24 @@ export function registerRoutes(
       return;
     }
     const id = randomUUID();
+    // Try description from dedicated field first, then parse from command JSON
+    const callerDescription = description?.trim()
+      || parseDescriptionFromCommand(command)
+      || null;
     await store.insertRequest({
       id,
       tool,
       command,
+      description: callerDescription,
       workdir,
       sessionId: sessionId ?? null,
       userId: 'user',
       requestedAt: Date.now(),
     });
-    generateDescription(store, id, tool, command);
+    // Only generate async description if caller didn't provide one
+    if (!callerDescription) {
+      generateDescription(store, id, tool, command);
+    }
     res.status(201).json({ requestId: id });
   });
 

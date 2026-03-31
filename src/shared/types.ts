@@ -60,6 +60,7 @@ export interface HookInput {
 export interface CreateRequestBody {
   tool: string;
   command: string;
+  description?: string;
   workdir: string;
   sessionId?: string;
 }

@@ -514,7 +514,7 @@
       </h1>
       <p>
         Intercept dangerous commands before they run. Approve or deny from your browser.
-        Every request includes an AI-generated description of what the command does.
+        Claude explains what it's doing and why before each request goes to review.
       </p>
       <div class="hero-actions">
         <a href="https://github.com/Seitk/claude-hitl-approval" class="btn btn-primary">
@@ -544,13 +544,13 @@
         </div>
         <div class="flow-step">
           <div class="step-number">2</div>
-          <h3>Hook intercepts</h3>
-          <p>The PreToolUse hook checks against your rules. If matched, it creates an approval request.</p>
+          <h3>Hook requests context</h3>
+          <p>The PreToolUse hook checks against your rules. If matched, it asks Claude to explain what it's doing and why.</p>
         </div>
         <div class="flow-step">
           <div class="step-number">3</div>
           <h3>Browser opens</h3>
-          <p>An approval page opens with the command details and an AI-generated risk description.</p>
+          <p>Claude re-submits the command with context. An approval page opens with the command details and Claude's explanation.</p>
         </div>
         <div class="flow-step">
           <div class="step-number">4</div>
@@ -575,10 +575,10 @@
           </div>
         </div>
         <div class="screenshot-card">
-          <div class="img-wrap"><img src="request_detail.png" alt="Approval request detail page showing command, description, and approve/deny buttons" /></div>
+          <div class="img-wrap"><img src="request_detail.png" alt="Claude Code terminal showing the two-step HITL flow: context requested, then Claude retries with description" /></div>
           <div class="caption">
-            <h3>Approval Page</h3>
-            <p>Review the command, AI-generated description, and approve or deny with one click.</p>
+            <h3>Context Request Flow</h3>
+            <p>The hook asks Claude to explain its intent. Claude retries with a description, then the request goes to review.</p>
           </div>
         </div>
       </div>
@@ -605,7 +605,7 @@
         <div class="feature-card">
           <div class="icon icon-green">&#9989;</div>
           <h3>AI Descriptions</h3>
-          <p>Each approval request includes an AI-generated explanation of what the command does and its potential risks.</p>
+          <p>Claude provides its own explanation of what the command does and why it's running it, straight from its conversation context.</p>
         </div>
         <div class="feature-card">
           <div class="icon icon-purple">&#128274;</div>

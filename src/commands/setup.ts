@@ -27,9 +27,10 @@ const SKILL_SECTION = `
 This project uses the \`claude-hitl-approval\` plugin. When a command is blocked by the HITL hook, you will see an error containing "HITL:" in the message.
 
 **Rules you MUST follow when you see HITL output:**
-1. NEVER retry the blocked command automatically. Do NOT run any additional commands.
-2. If denied: tell the user the command was denied and stop. Do not retry.
-3. If timed out: tell the user it timed out and ask them to approve at the HITL dashboard, then wait for them to ask you to retry.
+1. If you see \`HITL_CONTEXT_REQUIRED\`: You MUST retry the same command immediately, but this time include a detailed \`description\` parameter explaining (1) what the command does and (2) why you are running it in the current context. This is NOT a blocked command — it is a request for you to provide context for human review.
+2. If denied (contains "Command denied"): tell the user the command was denied and stop. Do NOT retry.
+3. If timed out (contains "timed out"): tell the user it timed out and ask them to approve at the HITL dashboard, then wait for them to ask you to retry.
+4. For denied/timed out: NEVER retry the blocked command automatically. Do NOT run any additional commands.
 
 **Config file:** \`~/.hitl.json\` — edit \`rules\` to add/remove patterns requiring approval.
 **Rule format:** \`{ "tool": "Bash", "pattern": "rm *" }\` — tool name + glob pattern on command string.

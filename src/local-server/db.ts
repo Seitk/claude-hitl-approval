@@ -41,9 +41,9 @@ export function initDb(path: string = getDbPath()): Database {
 
 export function insertRequest(db: Database, req: InsertPayload): void {
   db.run(
-    `INSERT INTO requests (id, tool, command, workdir, session_id, user_id, requested_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [req.id, req.tool, req.command, req.workdir, req.sessionId, req.userId, req.requestedAt],
+    `INSERT INTO requests (id, tool, command, description, workdir, session_id, user_id, requested_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [req.id, req.tool, req.command, req.description, req.workdir, req.sessionId, req.userId, req.requestedAt],
   );
 }
 

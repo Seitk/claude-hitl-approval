@@ -2,7 +2,7 @@
 
 An approval gate for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that intercepts dangerous commands before they run and requires human approval via a web UI.
 
-When Claude tries to execute a command matching your rules (e.g. `rm *`, `git push`), the hook pauses execution, opens a browser page, and waits for you to approve or deny. Each request includes an AI-generated description explaining what the command does and its risks.
+When Claude tries to execute a command matching your rules (e.g. `rm *`, `git push`), the hook first asks Claude to explain what it's doing and why. Claude re-submits the command with context, then the hook opens a browser page and waits for you to approve or deny.
 
 Flow: Claude runs command -> hook intercepts -> browser opens -> you approve/deny -> Claude continues or stops
 
@@ -29,10 +29,13 @@ That's it. Start Claude Code normally — when it triggers a matched command, yo
 Claude Code                    HITL Hook                     Local Server
     |                              |                              |
     |-- tool_call (Bash: rm -rf) ->|                              |
+    |                              |  [no description — reject]   |
+    |<-- HITL_CONTEXT_REQUIRED ----|                              |
+    |                              |                              |
+    |-- tool_call (Bash: rm -rf   |                              |
+    |   + description: "...") --->|                              |
     |                              |-- POST /requests ----------->|
     |                              |                              |-- [store in DB]
-    |                              |                              |-- [spawn claude --print
-    |                              |                              |    for description]
     |                              |<--- requestId ---------------|
     |                              |                              |
     |                              |-- open browser -------------->  (approval page)
@@ -48,10 +51,11 @@ Claude Code                    HITL Hook                     Local Server
 
 1. Claude Code's `PreToolUse` hook sends the tool call to the HITL hook script
 2. The hook checks if the command matches any rule in `.hitl.json`
-3. If matched, it creates an approval request on the local server and opens the browser
-4. The server generates an AI description of the command using `claude --print` (async, non-blocking)
-5. The hook polls until you approve, deny, or the request times out
-6. On approval, the hook exits 0 (allow). On denial/timeout, it exits 2 (block).
+3. If matched but no description provided, the hook rejects with `HITL_CONTEXT_REQUIRED` — asking Claude to explain what it's doing and why
+4. Claude re-submits the same command with a description providing context from its conversation
+5. The hook creates an approval request (with Claude's description) on the local server and opens the browser
+6. The hook polls until you approve, deny, or the request times out
+7. On approval, the hook exits 0 (allow). On denial/timeout, it exits 2 (block).
 
 ## Configuration
 
