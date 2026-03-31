@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude HITL Approval - Human-in-the-Loop for Claude Code</title>
+  <meta name="description" content="An approval gate for Claude Code that intercepts dangerous commands and requires human approval via a web UI." />
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface-raised: #1a1a1a;
+      --border: #262626;
+      --text: #e8e8e8;
+      --text-muted: #888;
+      --text-dim: #555;
+      --accent: #3b82f6;
+      --accent-dim: #2563eb;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ── Hero ──────────────────────────────────────────── */
+
+    .hero {
+      padding: 6rem 0 4rem;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .hero-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      font-family: var(--sans);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-dim); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: var(--surface-raised);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--text-dim); transform: translateY(-1px); }
+
+    /* ── Install bar ──────────────────────────────────── */
+
+    .install-bar {
+      max-width: 480px;
+      margin: 2.5rem auto 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.875rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .install-bar code {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--green);
+    }
+
+    .install-bar .prefix {
+      color: var(--text-dim);
+    }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+    /* ── Flow diagram ─────────────────────────────────── */
+
+    .flow-section {
+      padding: 4rem 0;
+    }
+
+    .flow-section h2 {
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+
+    .flow-section .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 3rem;
+      font-size: 1.05rem;
+    }
+
+    .flow-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .flow-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .flow-step .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin: 0 auto 1rem;
+    }
+
+    .flow-step h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .flow-step p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ── Features ──────────────────────────────────────── */
+
+    .features-section {
+      padding: 4rem 0;
+    }
+
+    .features-section h2 {
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 3rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .feature-card .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-card p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .icon-blue { background: rgba(59,130,246,0.12); }
+    .icon-green { background: rgba(34,197,94,0.12); }
+    .icon-purple { background: rgba(139,92,246,0.12); }
+    .icon-yellow { background: rgba(234,179,8,0.12); }
+    .icon-red { background: rgba(239,68,68,0.12); }
+    .icon-cyan { background: rgba(6,182,212,0.12); }
+
+    /* ── Config example ───────────────────────────────── */
+
+    .config-section {
+      padding: 4rem 0;
+    }
+
+    .config-section h2 {
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+
+    .config-section .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 2.5rem;
+      font-size: 1.05rem;
+    }
+
+    .config-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .config-block-header {
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      background: var(--surface-raised);
+    }
+
+    .config-block pre {
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+
+    .config-block .key { color: #7dd3fc; }
+    .config-block .str { color: #86efac; }
+    .config-block .num { color: #fde68a; }
+    .config-block .comment { color: var(--text-dim); font-style: italic; }
+
+    /* ── Extensibility ────────────────────────────────── */
+
+    .extend-section {
+      padding: 4rem 0;
+    }
+
+    .extend-section h2 {
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+
+    .extend-section .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 3rem;
+      font-size: 1.05rem;
+    }
+
+    .extend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .extend-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .extend-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .extend-card .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.75rem;
+    }
+
+    .tag-default { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .tag-custom { background: rgba(139,92,246,0.15); color: #a78bfa; }
+    .tag-api { background: rgba(234,179,8,0.15); color: #facc15; }
+
+    .extend-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+
+    .footer {
+      padding: 3rem 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+
+    .footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .footer a:hover { color: var(--text); }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Responsive ───────────────────────────────────── */
+
+    @media (max-width: 640px) {
+      .hero { padding: 4rem 0 3rem; }
+      .flow-steps { grid-template-columns: 1fr 1fr; }
+      .install-bar { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Claude Code Hook
+      </div>
+      <h1>
+        <span class="gradient">Human-in-the-Loop</span><br />
+        Approval for Claude Code
+      </h1>
+      <p>
+        Intercept dangerous commands before they run. Approve or deny from your browser.
+        Every request includes an AI-generated description of what the command does.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/Seitk/claude-hitl-approval" class="btn btn-primary">
+          View on GitHub
+        </a>
+        <a href="https://www.npmjs.com/package/claude-hitl-approval" class="btn btn-secondary">
+          npm package
+        </a>
+      </div>
+      <div class="install-bar">
+        <code><span class="prefix">$</span> npm install -g claude-hitl-approval</code>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('npm install -g claude-hitl-approval');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Flow -->
+  <section class="flow-section">
+    <div class="container">
+      <h2>How It Works</h2>
+      <p class="subtitle">Four steps between Claude's intent and execution</p>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="step-number">1</div>
+          <h3>Claude runs a command</h3>
+          <p>Claude Code calls a tool like <code>Bash</code>, <code>Write</code>, or an MCP tool.</p>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">2</div>
+          <h3>Hook intercepts</h3>
+          <p>The PreToolUse hook checks against your rules. If matched, it creates an approval request.</p>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">3</div>
+          <h3>Browser opens</h3>
+          <p>An approval page opens with the command details and an AI-generated risk description.</p>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">4</div>
+          <h3>You decide</h3>
+          <p>Click Approve or Deny. Claude proceeds or stops. Full audit trail preserved.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features-section">
+    <div class="container">
+      <h2>Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="icon icon-blue">&#9889;</div>
+          <h3>Glob Pattern Rules</h3>
+          <p>Define rules with tool name + glob pattern. <code>rm *</code>, <code>git push*</code>, <code>curl * | *</code> &mdash; match exactly what you want to gate.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon icon-green">&#9989;</div>
+          <h3>AI Descriptions</h3>
+          <p>Each approval request includes an AI-generated explanation of what the command does and its potential risks.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon icon-purple">&#128274;</div>
+          <h3>JWT-Protected Actions</h3>
+          <p>Approve/deny actions are protected by single-use JWT tokens with 5-minute TTL. No replay, no tampering.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon icon-yellow">&#128268;</div>
+          <h3>MCP Tool Gating</h3>
+          <p>Gate any MCP tool with the same rule system. Control third-party tools like databases, APIs, or deployment services.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon icon-red">&#128640;</div>
+          <h3>Web Dashboard</h3>
+          <p>Real-time dashboard showing all approval requests with status, timestamps, and links to detail pages.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon icon-cyan">&#128736;</div>
+          <h3>Fully Extensible</h3>
+          <p>Swap out SQLite for your own API, or replace the entire server with your own approval flow. Your rules.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Config -->
+  <section class="config-section">
+    <div class="container">
+      <h2>Simple Configuration</h2>
+      <p class="subtitle">One JSON file controls everything</p>
+      <div class="config-block">
+        <div class="config-block-header">.hitl.json</div>
+        <pre>{
+  <span class="key">"approval"</span>: {
+    <span class="key">"url"</span>: <span class="str">"http://localhost:9457"</span>,
+    <span class="key">"pollIntervalMs"</span>: <span class="num">1000</span>,
+    <span class="key">"timeoutMs"</span>: <span class="num">300000</span>
+  },
+  <span class="key">"rules"</span>: [
+    { <span class="key">"tool"</span>: <span class="str">"Bash"</span>, <span class="key">"pattern"</span>: <span class="str">"rm *"</span> },
+    { <span class="key">"tool"</span>: <span class="str">"Bash"</span>, <span class="key">"pattern"</span>: <span class="str">"git push*"</span> },
+    { <span class="key">"tool"</span>: <span class="str">"Bash"</span>, <span class="key">"pattern"</span>: <span class="str">"curl * | *"</span> },
+    { <span class="key">"tool"</span>: <span class="str">"mcp__server__tool"</span>, <span class="key">"pattern"</span>: <span class="str">"*"</span> }  <span class="comment">// gate MCP tools too</span>
+  ]
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Extensibility -->
+  <section class="extend-section">
+    <div class="container">
+      <h2>Three Ways to Run</h2>
+      <p class="subtitle">Use the defaults, customize the storage, or build your own</p>
+      <div class="extend-grid">
+        <div class="extend-card">
+          <span class="tag tag-default">Default</span>
+          <h3>Local Server + SQLite</h3>
+          <p>Run <code>claude-hitl local</code> and you're done. Approval requests stored in SQLite at <code>~/.hitl/hitl.db</code>, served through a polished web UI.</p>
+        </div>
+        <div class="extend-card">
+          <span class="tag tag-api">Custom Storage</span>
+          <h3>Local Server + Your API</h3>
+          <p>Keep the web UI but swap SQLite for your own backend. Set <code>dataSource.type: "api"</code> in config and point it at your storage API.</p>
+        </div>
+        <div class="extend-card">
+          <span class="tag tag-custom">Custom Server</span>
+          <h3>Your Own Server</h3>
+          <p>Replace everything. Build your own approval server with your own UI, storage, and flow. The hook just needs two endpoints.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-links">
+        <a href="https://github.com/Seitk/claude-hitl-approval">GitHub</a>
+        <a href="https://www.npmjs.com/package/claude-hitl-approval">npm</a>
+        <a href="https://github.com/Seitk/claude-hitl-approval/tree/main/examples">Examples</a>
+        <a href="https://github.com/Seitk/claude-hitl-approval/issues">Issues</a>
+      </div>
+      <p>MIT License &middot; Built for <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>

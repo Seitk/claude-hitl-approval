@@ -67,7 +67,8 @@ HITL looks for `.hitl.json` in your current directory first, then `~/.hitl.json`
   "rules": [
     { "tool": "Bash", "pattern": "rm *" },
     { "tool": "Bash", "pattern": "git push*" },
-    { "tool": "Bash", "pattern": "curl * | *" }
+    { "tool": "Bash", "pattern": "curl * | *" },
+    { "tool": "mcp__joke-server__tell_joke", "pattern": "*" }
   ]
 }
 ```
