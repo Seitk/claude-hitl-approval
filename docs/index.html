@@ -582,6 +582,13 @@
           </div>
         </div>
       </div>
+      <div class="screenshot-card" style="margin-top: 1.5rem;">
+        <div class="img-wrap" style="height: auto;"><img src="request_response.png" style="width: 100%; max-height: none;" alt="Claude Code terminal showing a denied MCP tool call blocked by the HITL hook" /></div>
+        <div class="caption">
+          <h3>Denied Request</h3>
+          <p>When a request is denied, Claude is notified and stops. Works with MCP tools too.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -628,7 +635,7 @@
   <section class="config-section">
     <div class="container">
       <h2>Simple Configuration</h2>
-      <p class="subtitle">One JSON file controls everything</p>
+      <p class="subtitle">Project-level <code>.hitl.json</code> takes precedence over global <code>~/.hitl.json</code></p>
       <div class="config-block">
         <div class="config-block-header">.hitl.json</div>
         <pre>{

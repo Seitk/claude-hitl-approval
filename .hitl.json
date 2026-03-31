@@ -7,6 +7,7 @@
   "rules": [
     { "tool": "Bash", "pattern": "*joke.ts*" },
     { "tool": "Bash", "pattern": "rm *" },
-    { "tool": "Bash", "pattern": "git push*" }
+    { "tool": "Bash", "pattern": "git push*" },
+    { "tool": "mcp__joke-server__tell_joke", "pattern": "*" }
   ]
 }

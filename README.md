@@ -55,7 +55,9 @@ Claude Code                    HITL Hook                     Local Server
 
 ## Configuration
 
-HITL looks for `.hitl.json` in your current directory first, then `~/.hitl.json`. The `setup` command creates a default config at `~/.hitl.json`.
+HITL looks for `.hitl.json` in your **current working directory first**, then falls back to `~/.hitl.json`. The `setup` command creates a default config at `~/.hitl.json`.
+
+> **Tip:** If you have a project-level `.hitl.json`, it takes full precedence over the global `~/.hitl.json`. Rules in the global config won't apply when a local config exists. Use a local `.hitl.json` to define project-specific rules (e.g. gating MCP tools only used in that project), and the global `~/.hitl.json` for rules you want everywhere.
 
 ```json
 {
