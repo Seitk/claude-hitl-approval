@@ -224,6 +224,65 @@
       line-height: 1.5;
     }
 
+    /* ── Screenshots ───────────────────────────────────── */
+
+    .screenshots-section {
+      padding: 4rem 0;
+    }
+
+    .screenshots-section h2 {
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+
+    .screenshots-section .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 2.5rem;
+      font-size: 1.05rem;
+    }
+
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .screenshot-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .screenshot-card img {
+      width: 100%;
+      display: block;
+    }
+
+    .screenshot-card .caption {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .screenshot-card .caption h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .screenshot-card .caption p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 700px) {
+      .screenshots-grid { grid-template-columns: 1fr; }
+    }
+
     /* ── Features ──────────────────────────────────────── */
 
     .features-section {
@@ -484,6 +543,30 @@
           <div class="step-number">4</div>
           <h3>You decide</h3>
           <p>Click Approve or Deny. Claude proceeds or stops. Full audit trail preserved.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section class="screenshots-section">
+    <div class="container">
+      <h2>See It in Action</h2>
+      <p class="subtitle">A polished web UI for reviewing and approving commands</p>
+      <div class="screenshots-grid">
+        <div class="screenshot-card">
+          <img src="request_list.png" alt="HITL Dashboard showing a list of approval requests with status badges" />
+          <div class="caption">
+            <h3>Dashboard</h3>
+            <p>Real-time list of all approval requests with status, tool, command, and timestamps.</p>
+          </div>
+        </div>
+        <div class="screenshot-card">
+          <img src="request_detail.png" alt="Approval request detail page showing command, description, and approve/deny buttons" />
+          <div class="caption">
+            <h3>Approval Page</h3>
+            <p>Review the command, AI-generated description, and approve or deny with one click.</p>
+          </div>
         </div>
       </div>
     </div>
